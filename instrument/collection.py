@@ -25,6 +25,9 @@ from .utils import *
 from apstools.utils import *
 
 from hkl.user import *
+from hkl.util import *
+
+import hdf5plugin
 
 # last line: ensure we have the console's logger
 from .session_logs import logger

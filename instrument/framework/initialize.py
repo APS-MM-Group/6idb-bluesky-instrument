@@ -45,6 +45,7 @@ from ophyd.signal import EpicsSignalBase
 import databroker
 import ophyd
 import warnings
+from .pilatus_handler import PilatusHDF5Handler
 
 # convenience imports
 import bluesky.plans as bp
@@ -93,6 +94,8 @@ cat = databroker.catalog[catalog_name]
 db = cat.v1
 logger.info(f"using databroker catalog '{catalog_name}'")
 
+# Register the handler for Pilatus
+cat.register_handler("AD_HDF5_Pilatus_6idb", PilatusHDF5Handler, overwrite=True)
 # Subscribe metadatastore to documents.
 # If this is removed, data is not saved to metadatastore.
 callback_db["db"] = RE.subscribe(db.v1.insert)
