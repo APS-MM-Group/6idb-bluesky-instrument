@@ -29,7 +29,7 @@ Auxilary HKL functions.
 
 import bluesky.plan_stubs as bps
 import pathlib
-
+from xraytube.devices.huber_diffractometer import psic, fourc, sixcq, sixcpsi
 
 try:
     # import gi
@@ -1553,4 +1553,6 @@ def update_lattice(lattice_constant=None):
         )
     )
 
+
+select_diffractometer(psic)
 

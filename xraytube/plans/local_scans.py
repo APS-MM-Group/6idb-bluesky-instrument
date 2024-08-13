@@ -16,7 +16,7 @@ from bluesky.preprocessors import (
     reset_positions_decorator, relative_set_decorator
 )
 from bluesky.plan_patterns import chunk_outer_product_args
-from hkl.user import _geom_
+from hkl.user import  current_diffractometer
 from .local_preprocessors import (
     configure_counts_decorator,
     extra_devices_decorator
@@ -71,10 +71,12 @@ def one_local_step(detectors, step, pos_cache, take_reading=trigger_and_read):
 
     if flag.fixq:
         # devices_to_read += [fourc]
+
+        _geom =current_diffractometer()
         args = (
-            _geom_.h, flag.hkl_pos["h"],
-            _geom_.k, flag.hkl_pos["k"],
-            _geom_.l, flag.hkl_pos["l"]
+            _geom.h, flag.hkl_pos["h"],
+            _geom.k, flag.hkl_pos["k"],
+            _geom.l, flag.hkl_pos["l"]
         )
         yield from bps_mv(*args)
 
@@ -110,7 +112,7 @@ def count(detectors=None, num=1, time=None, delay=0, md=None):
     if detectors is None:
         detectors = counters.detectors
 
-    extras = [_geom_]
+    extras = [current_diffractometer()]
 
     # TODO: The md handling might go well in a decorator.
     # TODO: May need to add reference to stream.
@@ -124,7 +126,7 @@ def count(detectors=None, num=1, time=None, delay=0, md=None):
     @extra_devices_decorator(extras)
     def _inner_ascan():
         yield from bp_count(
-            detectors + [_geom_],
+            detectors + extras,
             num=num,
             delay=delay,
             md=_md
@@ -189,10 +191,11 @@ def ascan(
     if per_step is None:
         per_step = one_local_step if fixq else None
     if fixq:
+        _geom = current_diffractometer()
         flag.hkl_pos = {
-            "h": _geom_.h.get().setpoint,
-            "k": _geom_.k.get().setpoint,
-            "l": _geom_.l.get().setpoint,
+            "h": _geom.h.get().setpoint,
+            "k": _geom.k.get().setpoint,
+            "l": _geom.l.get().setpoint,
         }
 
     # This allows passing "time" without using the keyword.
@@ -204,7 +207,7 @@ def ascan(
         detectors = counters.detectors
 
     # I will leave this here just in case we need to add things later.
-    extras = [_geom_]
+    extras = [current_diffractometer()]
 
     # TODO: The md handling might go well in a decorator.
     # TODO: May need to add reference to stream.
@@ -351,10 +354,11 @@ def grid_scan(*args, time=None, detectors=None, snake_axes=None, fixq=False,
     if per_step is None:
         per_step = one_local_step if fixq else None
     if fixq:
+        _geom = current_diffractometer()
         flag.hkl_pos = {
-            "h": _geom_.h.get().setpoint,
-            "k": _geom_.k.get().setpoint,
-            "l": _geom_.l.get().setpoint,
+            "h": _geom.h.get().setpoint,
+            "k": _geom.k.get().setpoint,
+            "l": _geom.l.get().setpoint,
         }
 
     # This allows passing "time" without using the keyword.
@@ -365,7 +369,7 @@ def grid_scan(*args, time=None, detectors=None, snake_axes=None, fixq=False,
     if detectors is None:
         detectors = counters.detectors
 
-    extras = [_geom_]
+    extras = [current_diffractometer()]
 
     # TODO: The md handling might go well in a decorator.
     # TODO: May need to add reference to stream.

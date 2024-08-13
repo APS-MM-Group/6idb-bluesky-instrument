@@ -10,9 +10,9 @@ DATABROKER_CATALOG: &databroker_catalog 6idb
 
 # default RunEngine metadata
 RUNENGINE_METADATA:
-  beamline_id: 6idb-tube
+  beamline_id: 6id-lab
   instrument_name: 6-id-b
-  proposal_id: xraytube
+  proposal_id: lab
   databroker_catalog: *databroker_catalog
 
 # Uncomment and edit to define a PV to use for the `scan_id`.
@@ -38,7 +38,7 @@ WRITE_SPEC_DATA_FILES: true
 
 # Directory to "autosave" the RE.md dictionary (uses PersistentDict)
 # Uncomment and modify to change from the default.
-RUNENGINE_MD_PATH: /home/beams/USER6IDB/Bluesky_RunEngine_xraytube_md
+RUNENGINE_MD_PATH: /home/USER6IDB/Bluesky_RunEngine_lab_md
 
 # override default control layer for ophyd
 # if undefined, defaults to PyEpics
@@ -74,6 +74,3 @@ MINIMUM_OPHYD_VERSION:
 MINIMUM_DATABROKER_VERSION:
   - 1
   - 2
-
-# identify the version of this iconfig.yml file
-ICONFIG_VERSION: 1.0.1

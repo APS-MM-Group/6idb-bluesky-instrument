@@ -4,37 +4,34 @@ define standard experiment metadata
 
 __all__ = []
 
-import logging
-
-logger = logging.getLogger(__name__)
+from ..session_logs import logger
 
 logger.info(__file__)
 
-from .. import iconfig
-
-import getpass
-import os
-import socket
-from datetime import datetime
-
+from .._iconfig import iconfig
+#from ..epics_signal_config import epics_scan_id_source
+#from ..epics_signal_config import scan_id_epics
+scan_id_epics = None
 import apstools
+import bluesky
 import databroker
+from datetime import datetime
 import epics
+import getpass
 import h5py
 import intake
 import matplotlib
 import numpy
 import ophyd
+import os
 import pyRestTable
+import socket
 import spec2nexus
 
-import bluesky
-
-from .initialize import RE
-from .initialize import cat
+from .initialize import cat, RE
 
 HOSTNAME = socket.gethostname() or "localhost"
-USERNAME = getpass.getuser() or "Bluesky user"
+USERNAME = getpass.getuser() or "APS lesson user"
 
 # useful diagnostic to record with all data
 versions = dict(
@@ -57,8 +54,8 @@ RE.md["login_id"] = USERNAME + "@" + HOSTNAME
 RE.md.update(iconfig.get("RUNENGINE_METADATA", {}))
 RE.md["versions"] = versions
 RE.md["pid"] = os.getpid()
-RE.md["iconfig"] = iconfig
-
+if scan_id_epics is not None:
+    RE.md["scan_id"] = scan_id_epics.get()
 conda_prefix = os.environ.get("CONDA_PREFIX")
 if conda_prefix is not None:
     RE.md["conda_prefix"] = conda_prefix
