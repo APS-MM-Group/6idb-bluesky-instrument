@@ -18,6 +18,7 @@ Auxilary HKL functions.
     ~calc_UB
     ~setmode
     ~ca
+    ~ubr
     ~br
     ~uan
     ~wh
@@ -27,21 +28,116 @@ Auxilary HKL functions.
     ~write_config
 """
 
-import bluesky.plan_stubs as bps
-import pathlib
-from xraytube.devices.huber_diffractometer import psic, fourc, sixcq, sixcpsi
+"""
+Provide a simplified UI for hklpy diffractometer users.
+
+The user must define a diffractometer instance, then
+register that instance here calling `select_diffractometer(instance)`.
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Must register select_diffractometer, select_engine_for_psi, select_engine_for_q after load this file 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+select_diffractometer(psic)
+select_engine_for_psi(sixcpsi)
+select_engine_for_q(sixcq)
+
+
+FUNCTIONS
+
+.. autosummary::
+
+    ~select_engine_for_psi
+    ~engine_for_psi
+    ~select_engine_for_q
+    ~engine_for_q
+"""
+
+__all__ = """
+    select_engine_for_psi
+    engine_for_psi
+    select_engine_for_q
+    engine_for_q
+    samplelist
+    wh
+    ubr
+    br
+    uan
+    an
+    setmode
+""".split()
 
 try:
     # import gi
     # gi.require_version("Hkl", "5.0")
     #import hkl
+#    from sys import path
+#    path.append("/home/beams/USER6IDB/bluesky/xraytube/devices")
+#    from home.beams.USER6IDB.bluesky.xraytube.devices.huber_diffractometer import psic, fourc, sixcpsi, sixcq
     from hkl import cahkl
     from hkl.user import _check_geom_selected, select_diffractometer, current_diffractometer, _geom_
     from hkl.diffract import Diffractometer
+    from xraytube.devices.huber_diffractometer import psic, fourc, sixcq, sixcpsi
+    from bluesky import RunEngine, RunEngineInterrupted
+    from bluesky.utils import ProgressBarManager
+    import asyncio
+    from bluesky.plan_stubs import mv
     #from hkl.configuration import DiffractometerConfiguration
 except ModuleNotFoundError:
     print("gi module is not installed, the hkl_utils functions will not work!")
     cahkl = _check_geom_selected = _geom_ = None
+
+_geom_ = None  # selected diffractometer geometry
+_geom_for_psi_ = None # geometry for psi calculation
+_geom_for_q_ = None # geometry for q calculation
+
+RE = RunEngine({}, loop=asyncio.new_event_loop())
+pbar_manager = ProgressBarManager()
+
+# from instrument.collection import RE
+
+# def calc_energy():
+#     # TODO: should this be added?
+#     raise NotImplementedError
+
+
+
+def select_engine_for_psi(instrument=None):
+    """Name the diffractometer to be used."""
+    global _geom_for_psi_
+    if instrument is None or isinstance(instrument, Diffractometer):
+        _geom_for_psi_ = instrument
+    else:
+        raise TypeError(f"{instrument} must be a 'Diffractometer' subclass")
+
+def engine_for_psi():
+    """Return the currently-selected psi calc engine (or ``None``)."""
+    return _geom_for_psi_
+    
+def select_engine_for_q(instrument=None):
+    """Name the diffractometer to be used."""
+    global _geom_for_q_
+    if instrument is None or isinstance(instrument, Diffractometer):
+        _geom_for_q_ = instrument
+    else:
+        raise TypeError(f"{instrument} must be a 'Diffractometer' subclass")
+
+def engine_for_q():
+    """Return the currently-selected q calc engine (or ``None``)."""
+    return _geom_for_q_
+ 
+
+
+    
+
+
+
+import bluesky.plan_stubs as bps
+import pathlib
+
 
 
 path_startup = pathlib.Path("startup_experiment.py")
@@ -89,7 +185,7 @@ def sampleChange(sample_key=None):
         print("Not a valid sample key")
 
 
-def sampleList():
+def _sampleList():
     """List all samples currently defined in hklpy; specify  current one."""
     _geom_ = current_diffractometer()
     samples = _geom_.calc._samples
@@ -195,6 +291,7 @@ def list_reflections(all_samples=False):
     _geom_ = current_diffractometer()
     if all_samples:
         samples = _geom_.calc._samples.values()
+#        samples = _geom_.calc._samples        
     else:
         samples = [_geom_.calc._sample]
     for sample in samples:
@@ -393,11 +490,11 @@ def setor0(*args):
             for ref in sample._sample.reflections_get():
                 if ref == orienting_refl[0] and _geom_.name == "psic":
                     pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[4]
+                    old_delta = pos[5]
                     old_th = pos[1]
                     old_chi = pos[2]
                     old_phi = pos[3]
-                    old_gamma = pos[5]
+                    old_gamma = pos[4]
                     old_mu = pos[0]
                     old_h, old_k, old_l = ref.hkl_get()
                 elif ref == orienting_refl[0] and _geom_.name == "fourc":
@@ -426,7 +523,7 @@ def setor0(*args):
         chi = input("Chi = [{:6.2f}]: ".format(old_chi)) or old_chi
         phi = input("Phi = [{:6.2f}]: ".format(old_phi)) or old_phi
         if len(_geom_.calc.physical_axes) == 6:
-            gamma = input("Gamma = [{:6.2f}]: ".format(old_gamma)) or old_gamma
+            gamma = input("Nu = [{:6.2f}]: ".format(old_gamma)) or old_gamma
             mu = input("Mu = [{:6.2f}]: ".format(old_mu)) or old_mu
         h = input("H = [{}]: ".format(old_h)) or old_h
         k = input("K = [{}]: ".format(old_k)) or old_k
@@ -505,11 +602,11 @@ def setor1(*args):
             for ref in sample._sample.reflections_get():
                 if ref == orienting_refl[1] and _geom_.name == "psic":
                     pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[4]
+                    old_delta = pos[5]
                     old_th = pos[1]
                     old_chi = pos[2]
                     old_phi = pos[3]
-                    old_gamma = pos[5]
+                    old_gamma = pos[4]
                     old_mu = pos[0]
                     old_h, old_k, old_l = ref.hkl_get()
                 elif ref == orienting_refl[1] and _geom_.name == "fourc":
@@ -538,7 +635,7 @@ def setor1(*args):
         chi = input("Chi = [{:6.2f}]: ".format(old_chi)) or old_chi
         phi = input("Phi = [{:6.2f}]: ".format(old_phi)) or old_phi
         if len(_geom_.calc.physical_axes) == 6:
-            gamma = input("Gamma = [{:6.2f}]: ".format(old_gamma)) or old_gamma
+            gamma = input("Nu = [{:6.2f}]: ".format(old_gamma)) or old_gamma
             mu = input("Mu = [{:6.2f}]: ".format(old_mu)) or old_mu
         h = input("H = [{}]: ".format(old_h)) or old_h
         k = input("K = [{}]: ".format(old_k)) or old_k
@@ -1243,7 +1340,7 @@ def calc_UB(r1, r2, wavelength=None, output=False):
         print(_geom_.calc.sample.UB)
 
 
-def setmode(mode=None):
+def _setmode(mode=None):
     """
     Set the mode of the currently selected diffractometer.
 
@@ -1322,6 +1419,37 @@ def ca(h, k, l):
             )
         )
 
+def _ensure_idle():
+    if  RE.state != 'idle':
+        print('The RunEngine invoked by magics cannot be resumed.')
+        print('Aborting...')
+        RE.abort()
+
+def ubr(h, k, l):
+    """
+    Move the motors to a reciprocal space point.
+
+    Parameters
+    ----------
+    h, k, l : float
+        H, K, and L values.
+
+    Returns
+    -------
+    """
+    _geom_ = current_diffractometer()
+    plan = mv(
+        _geom_.h, float(h), _geom_.k, float(k), _geom_.l, float(l)
+    )
+    RE.waiting_hook = pbar_manager
+    try:
+        RE(plan)
+    except RunEngineInterrupted:
+        ...
+    RE.waiting_hook = None
+    _ensure_idle()
+    return None
+
 
 def br(h, k, l):
     """
@@ -1342,7 +1470,45 @@ def br(h, k, l):
     )
 
 
-def uan(delta=None, th=None):
+def uan(*args):
+    """
+    Moves the delta and theta motors.
+
+    WARNING: This function will only work with six circles. This will be fixed
+    in future releases.
+
+    Parameters
+    ----------
+    delta, th: float, optional??
+        Delta and th motor angles to be moved to.
+
+    Returns
+    -------
+    """
+    _geom_ = current_diffractometer()
+    if len(args) != 2:
+        delta, th = args
+        raise ValueError("Usage: uan(delta/tth,eta/th)")
+    else:
+        delta, th = args
+        if len(_geom_.calc.physical_axes) == 6:
+            print("Moving to (delta,eta)=({},{})".format(delta, th))
+            plan = mv(_geom_.delta, delta, _geom_.omega, th)
+        elif len(_geom_.calc.physical_axes) == 4:
+            print("Moving to (tth,th)=({},{})".format(delta, th))
+            plan = mv(_geom_.tth, delta, _geom_.omega, th)
+    RE.waiting_hook = pbar_manager
+    try:
+        RE(plan)
+    except RunEngineInterrupted:
+        ...
+    RE.waiting_hook = None
+    _ensure_idle()
+    return None
+
+
+
+def an(delta=None, th=None):
     """
     Moves the delta and theta motors.
 
@@ -1359,19 +1525,21 @@ def uan(delta=None, th=None):
     Generator for the bluesky Run Engine.
     """
     _geom_ = current_diffractometer()
-    if not delta or not th:
-        raise ValueError("Usage: uan(delta/tth,th)")
+    if len(args) != 2:
+        delta, th = args
+        raise ValueError("Usage: uan(delta/tth,eta/th)")
     else:
+        delta, th = args
         if len(_geom_.calc.physical_axes) == 6:
-            print("Moving to (delta,th)=({},{})".format(delta, th))
+            print("Moving to (delta,eta)=({},{})".format(delta, th))
             yield from bps.mv(_geom_.delta, delta, _geom_.omega, th)
         elif len(_geom_.calc.physical_axes) == 4:
             print("Moving to (tth,th)=({},{})".format(delta, th))
             yield from bps.mv(_geom_.tth, delta, _geom_.omega, th)
 
 
-def wh():
-    from ..devices.huber_diffactometer import sixcpsi_name
+def _wh():
+    import numpy as np
     """
     Retrieve information on the current reciprocal space position.
 
@@ -1379,11 +1547,14 @@ def wh():
     in future releases.
     """
     _geom_ = current_diffractometer()
+    _geom_for_psi_ = engine_for_psi()
+    _geom_for_psi_.calc.sample.UB=_geom_.calc._sample.UB
+    _geom_for_q_ = engine_for_q()
     print(
-        "\n   H K L = {:5f} {:5f} {:5f}".format(
-            _geom_.calc.engine.pseudo_axes["h"],
-            _geom_.calc.engine.pseudo_axes["k"],
-            _geom_.calc.engine.pseudo_axes["l"],
+        "\n   H K L = {:5f}, {:5f}, {:5f}".format(
+            _geom_.h.get()[0],
+            _geom_.k.get()[0],
+            _geom_.l.get()[0],
         )
     )
     print(
@@ -1420,12 +1591,27 @@ def wh():
             )
         )
     print(
-        "\n   PSI = {:5f} ".format(
-            sixcpsi.inverse(0).psi,
+        "\n   PSI = {:5.4f} ".format(
+            _geom_for_psi_.inverse(0).psi,
         )
     )
-
-
+    _h2, _k2, _l2 = _geom_for_psi_.calc._engine.engine.parameters_values_get(
+            1
+            )
+    print(
+        "   PSI reference vector = {:3.3f} {:3.3f} {:3.3f}".format(
+            _h2,
+            _k2,
+            _l2,
+        )
+    )
+    tth_from_q = 2*np.emath.arcsin(_geom_for_q_.inverse(0).q/4/np.pi*12.39842/_geom_.calc.energy)*180/np.pi
+    print(
+        "\n   Q = {:5f}  tth = {:5f}".format(
+            _geom_for_q_.inverse(0).q, tth_from_q
+        )
+    )
+ 
 def setlat(*args):
     """
     Set the lattice constants.
@@ -1553,6 +1739,135 @@ def update_lattice(lattice_constant=None):
         )
     )
 
+def setaz(*args):
+    _geom_ = current_diffractometer()
+    _geom_for_psi_ = engine_for_psi()
+    _check_geom_selected()
+    if  len(_geom_.calc.physical_axes) == 4 :
+        mode_temp=_geom_.calc.engine.mode
+        _geom_.calc.engine.mode = "psi_constant"
+        _h2, _k2, _l2, psi = _geom_.calc._engine.engine.parameters_values_get(
+            1
+        )
+        if len(args) == 3:
+            h2, k2, l2 = args
+        elif len(args) == 0:
+            h2 = int((input("H = ({})? ".format(_h2))) or _h2)
+            k2 = int((input("K = ({})? ".format(_k2))) or _k2)
+            l2 = int((input("L = ({})? ".format(_l2))) or _l2)
+        
+        else:
+            raise ValueError(
+                "either no arguments or h, k, l need to be provided."
+            )
+        _geom_.calc._engine.engine.parameters_values_set(
+            [h2, k2, l2], 1
+        )
+        _geom_for_psi_.calc._engine.engine.parameters_values_set(
+            [h2, k2, l2], 1
+        )
+        print("Azimuth = {} {} {} with Psi fixed at {}".format(h2, k2, l2, psi))
+    elif  len(_geom_.calc.physical_axes) == 6 :
+        mode_temp=_geom_.calc.engine.mode
+        _geom_.calc.engine.mode = "psi_constant_vertical"      
+        _h2, _k2, _l2, psi = _geom_.calc._engine.engine.parameters_values_get(
+            1
+            )
+        if len(args) == 3:
+            h2, k2, l2 = args
+        elif len(args) == 0:
+            h2 = int((input("H = ({})? ".format(_h2))) or _h2)
+            k2 = int((input("K = ({})? ".format(_k2))) or _k2)
+            l2 = int((input("L = ({})? ".format(_l2))) or _l2)
+            _geom_.calc._engine.engine.parameters_values_set(
+                [h2, k2, l2], 1
+                )
+            _geom_.calc.engine.mode = mode_temp
+        else:
+            raise ValueError(
+                "either no arguments or h, k, l need to be provided."
+            )
+        _geom_for_psi_.calc._engine.engine.parameters_values_set(
+            [h2, k2, l2], 1
+        )
+        print("Azimuth = {} {} {} with Psi fixed at {}".format(h2, k2, l2, psi))
+    
+    else:
+        raise ValueError(
+            "Function not available in mode '{}'".format(
+                _geom_.calc.engine.mode
+            )
+        )
+
+def freeze_psi(*args):
+    _geom_ = current_diffractometer()
+    _geom_for_psi_ = engine_for_psi()
+    _check_geom_selected()
+    if (_geom_.calc.engine.mode == "psi_constant" or 
+        _geom_.calc.engine.mode == "psi_constant_vertical" or
+        _geom_.calc.engine.mode == "psi_constant_horizontal"
+    ):
+        h2, k2, l2, psi = _geom_.calc._engine.engine.parameters_values_get(
+            1
+        )
+        if len(args) == 0:
+            psi =_geom_for_psi_.inverse(0).psi
+        elif len(args) == 1:
+            psi = args[0]
+        else:
+            raise ValueError(
+                "either no argument or azimuth needs to be provided."
+            )
+        _geom_.calc._engine.engine.parameters_values_set(
+            [h2, k2, l2, psi], 1
+        )
+        print("Psi = {}".format(psi))
+    else:
+        raise ValueError(
+            "Function not available in mode '{}'".format(
+                _geom_.calc.engine.mode
+            )
+        )
+        
+
 
 select_diffractometer(psic)
+select_engine_for_psi(sixcpsi)
+select_engine_for_q(sixcq)
 
+
+class whClass:
+    """
+   _wh function used without parenthesis   
+    """
+
+    def __repr__(self):
+        print("")
+        _wh()
+        return ""
+        
+wh = whClass()
+
+class setmodeClass:
+    """
+    _setmode function used without parenthesis   
+    """
+
+    def __repr__(self):
+        print("")
+        _setmode()
+        return ""
+        
+setmode = setmodeClass()
+
+class sampleListClass:
+    """
+    _sampleList function used without parenthesis   
+    """
+
+    def __repr__(self):
+        print("")
+        _sampleList()
+        return ("")
+        
+samplelist = sampleListClass()
