@@ -196,78 +196,6 @@ def _sampleList():
         print("Lattice:", end=" ")
         print(*samples[x].lattice._fields, sep=", ", end=" = ")
         print(*samples[x].lattice, sep=", ")
-        for ref in samples[x]._sample.reflections_get():
-            if orienting_refl[0] == ref:
-                h, k, l = ref.hkl_get()
-                pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                if len(_geom_.calc.physical_axes) == 6:
-                    print(
-                        "{:>3}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   ".format(
-                            "or0",
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[4],
-                            pos[1],
-                            pos[2],
-                            pos[3],
-                            pos[5],
-                            pos[0],
-                        )
-                    )
-                elif len(_geom_.calc.physical_axes) == 4:
-                    print(
-                        "{:>3}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   ".format(
-                            "or0",
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[3],
-                            pos[0],
-                            pos[1],
-                            pos[2],
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Geometry {} not supported.".format(_geom_.name)
-                    )
-
-            elif orienting_refl[1] == ref:
-                h, k, l = ref.hkl_get()
-                pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                if len(_geom_.calc.physical_axes) == 6:
-                    print(
-                        "{:>3}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}  ".format(
-                            "or1",
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[4],
-                            pos[1],
-                            pos[2],
-                            pos[3],
-                            pos[5],
-                            pos[0],
-                        )
-                    )
-                elif len(_geom_.calc.physical_axes) == 4:
-                    print(
-                        "{:>3}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}  ".format(
-                            "or1",
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[3],
-                            pos[0],
-                            pos[1],
-                            pos[2],
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Geometry {} not supported.".format(_geom_.name)
-                    )
         print(
             "======================================================================"
         )
@@ -297,150 +225,38 @@ def list_reflections(all_samples=False):
     for sample in samples:
         print("Sample: {}".format(sample.name))
         orienting_refl = sample._orientation_reflections
-        if len(_geom_.calc.physical_axes) == 6:
-            print(
-                "\n{:>2}{:>4}{:>3}{:>3}{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}   {:<12}".format(
-                    "#",
-                    "H",
-                    "K",
-                    "L",
-                    "Delta",
-                    "Theta",
-                    "Chi",
-                    "Phi",
-                    "Gamma",
-                    "Mu",
-                    "orienting",
-                )
-            )
-        elif len(_geom_.calc.physical_axes) == 4:
-            print(
-                "\n{:>2}{:>4}{:>3}{:>3}{:>12}{:>9}{:>9}{:>9}   {:<12}".format(
-                    "#",
-                    "H",
-                    "K",
-                    "L",
-                    "Two Theta",
-                    "Theta",
-                    "Chi",
-                    "Phi",
-                    "orienting",
-                )
-            )
-        else:
-            raise ValueError("Geometry {} not supported.".format(_geom_.name))
-
+        print(
+            f"\n #  {''.join(f'{m:>7}'for m in _geom_.pseudo_positioners._fields).upper()}"
+            f" {''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+            f"   orienting"
+        )
         for i, ref in enumerate(sample._sample.reflections_get()):
             if orienting_refl[0] == ref:
+                or0_old = i
                 h, k, l = ref.hkl_get()
                 pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                if len(_geom_.calc.physical_axes) == 6:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[4],
-                            pos[1],
-                            pos[2],
-                            pos[3],
-                            pos[5],
-                            pos[0],
-                            "first",
-                        )
-                    )
-                elif len(_geom_.calc.physical_axes) == 4:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[3],
-                            pos[0],
-                            pos[1],
-                            pos[2],
-                            "first",
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Geometry {} not supported.".format(_geom_.name)
-                    )
+                print(
+                    "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                    f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                    "   first"
+                )
             elif orienting_refl[1] == ref:
-                # or1_old = i
+                or1_old = i
                 h, k, l = ref.hkl_get()
                 pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                if len(_geom_.calc.physical_axes) == 6:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[4],
-                            pos[1],
-                            pos[2],
-                            pos[3],
-                            pos[5],
-                            pos[0],
-                            "second",
-                        )
-                    )
-                elif len(_geom_.calc.physical_axes) == 4:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[3],
-                            pos[0],
-                            pos[1],
-                            pos[2],
-                            "second",
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Geometry {} not supported.".format(_geom_.name)
-                    )
+                print(
+                    "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                     f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                     "   second"
+                )
             else:
                 h, k, l = ref.hkl_get()
                 pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                if len(_geom_.calc.physical_axes) == 6:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[4],
-                            pos[1],
-                            pos[2],
-                            pos[3],
-                            pos[5],
-                            pos[0],
-                        )
-                    )
-                elif len(_geom_.calc.physical_axes) == 4:
-                    print(
-                        "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                            i,
-                            int(h),
-                            int(k),
-                            int(l),
-                            pos[3],
-                            pos[0],
-                            pos[1],
-                            pos[2],
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        "Geometry {} not supported.".format(_geom_.name)
-                    )
+                print(
+                    "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                     f"{''.join(f'{k:>10.3f}' for k in pos)}"
+                )
+
         if len(samples) > 1 and all_samples:
             print(
                 "============================================================================"
@@ -460,101 +276,52 @@ def or_swap():
     _geom_.forward(1, 0, 0)
 
 
-def setor0(*args):
+def setor0():
     """
     Sets the primary orientation in hklpy.
 
-    WARNING: This function will only work with six circles. This will be fixed
-    in future releases.
-
     Parameters
     ----------
-    delta, th, chi, phi, gamma, mu : float, optional
-        Values of motor positions for current reflection. If None, it will ask
+    diffractometer real motors : float, optional
+        Values of motor positions for current reflection. It will ask
         for it.
     h, k, l : float, optional
-        Values of H, K, L positions for current reflection. If None, it will ask
+        Values of H, K, L positions for current reflection. It will ask
         for it.
     """
     _check_geom_selected()
     _geom_ = current_diffractometer()
     sample = _geom_.calc._sample
     orienting_refl = sample._orientation_reflections
-
-    if _geom_.name == "psic" and len(args) == 9:
-        delta, th, chi, phi, gamma, mu, h, k, l = args
-    elif _geom_.name == "fourc" and len(args) == 7:
-        delta, th, chi, phi, h, k, l = args
+    motors = _geom_.real_positioners._fields
+    if len(orienting_refl) > 1:
+        for ref in sample._sample.reflections_get():
+            if ref == orienting_refl[0]:
+                pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
+                old_h, old_k, old_l = ref.hkl_get()
     else:
-        if len(orienting_refl) > 1:
-            for ref in sample._sample.reflections_get():
-                if ref == orienting_refl[0] and _geom_.name == "psic":
-                    pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[5]
-                    old_th = pos[1]
-                    old_chi = pos[2]
-                    old_phi = pos[3]
-                    old_gamma = pos[4]
-                    old_mu = pos[0]
-                    old_h, old_k, old_l = ref.hkl_get()
-                elif ref == orienting_refl[0] and _geom_.name == "fourc":
-                    pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[3]
-                    old_th = pos[0]
-                    old_chi = pos[1]
-                    old_phi = pos[2]
-                    old_h, old_k, old_l = ref.hkl_get()
+        pos = [None]* len(motors)
+        for i in range(0,len(_geom_.real_positioners._fields)):
+            pos[i]=0
+        old_h = 0
+        old_k = 0
+        old_l = 0
 
-        else:
-            old_delta = 60
-            old_th = 30
-            old_chi = 90
-            old_phi = 0
-            old_h = 4
-            old_k = 0
-            old_l = 0
-            if len(_geom_.calc.physical_axes) == 6:
-                old_gamma = 0
-                old_mu = 0
+    print("Enter primary-reflection angles:")
+    or0pos = [None] * len(_geom_.real_positioners._fields)
+    for i in range(0,len(_geom_.real_positioners._fields)):
+        temppos = input("{} = [{:6.2f}]: ".format(motors[i], pos[i])) or pos[i]
+        or0pos[i] = float(temppos)
+    h = input("H = [{}]: ".format(old_h)) or old_h
+    k = input("K = [{}]: ".format(old_k)) or old_k
+    l = input("L = [{}]: ".format(old_l)) or old_l
 
-        print("Enter primary-reflection angles:")
-        delta = input("Delta = [{:6.2f}]: ".format(old_delta)) or old_delta
-        th = input("Theta = [{:6.2f}]: ".format(old_th)) or old_th
-        chi = input("Chi = [{:6.2f}]: ".format(old_chi)) or old_chi
-        phi = input("Phi = [{:6.2f}]: ".format(old_phi)) or old_phi
-        if len(_geom_.calc.physical_axes) == 6:
-            gamma = input("Nu = [{:6.2f}]: ".format(old_gamma)) or old_gamma
-            mu = input("Mu = [{:6.2f}]: ".format(old_mu)) or old_mu
-        h = input("H = [{}]: ".format(old_h)) or old_h
-        k = input("K = [{}]: ".format(old_k)) or old_k
-        l = input("L = [{}]: ".format(old_l)) or old_l
-
-    if len(_geom_.calc.physical_axes) == 6:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                delta=float(delta),
-                omega=float(th),
-                chi=float(chi),
-                phi=float(phi),
-                gamma=float(gamma),
-                mu=float(mu),
-            ),
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                tth=float(delta),
-                omega=float(th),
-                chi=float(chi),
-                phi=float(phi),
-            ),
-        )
+    sample.add_reflection(
+        float(h),
+        float(k),
+        float(l),
+        or0pos
+    )
 
     if len(orienting_refl) > 1:
         sample._orientation_reflections.pop(0)
@@ -571,20 +338,18 @@ def setor0(*args):
         _geom_.forward(1, 0, 0)
 
 
-def setor1(*args):
+def setor1():
     """
     Sets the primary secondary in hklpy.
 
-    WARNING: This function will only work with six circles. This will be fixed
-    in future releases.
 
     Parameters
     ----------
-    delta, th, chi, phi, gamma, mu : float, optional
-        Values of motor positions for current reflection. If None, it will ask
+    diffractometer real motors : float, optional
+        Values of motor positions for current reflection. It will ask
         for it.
     h, k, l : float, optional
-        Values of H, K, L positions for current reflection. If None, it will ask
+        Values of H, K, L positions for current reflection. It will ask
         for it.
     """
 
@@ -592,81 +357,35 @@ def setor1(*args):
     _geom_ = current_diffractometer()
     sample = _geom_.calc._sample
     orienting_refl = sample._orientation_reflections
-
-    if _geom_.name == "psic" and len(args) == 9:
-        delta, th, chi, phi, gamma, mu, h, k, l = args
-    elif _geom_.name == "fourc" and len(args) == 7:
-        delta, th, chi, phi, h, k, l = args
+    motors = _geom_.real_positioners._fields
+    if len(orienting_refl) > 1:
+        for ref in sample._sample.reflections_get():
+            if ref == orienting_refl[1]:
+                pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
+                old_h, old_k, old_l = ref.hkl_get()
     else:
-        if len(orienting_refl) > 1:
-            for ref in sample._sample.reflections_get():
-                if ref == orienting_refl[1] and _geom_.name == "psic":
-                    pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[5]
-                    old_th = pos[1]
-                    old_chi = pos[2]
-                    old_phi = pos[3]
-                    old_gamma = pos[4]
-                    old_mu = pos[0]
-                    old_h, old_k, old_l = ref.hkl_get()
-                elif ref == orienting_refl[1] and _geom_.name == "fourc":
-                    pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-                    old_delta = pos[3]
-                    old_th = pos[0]
-                    old_chi = pos[1]
-                    old_phi = pos[2]
-                    old_h, old_k, old_l = ref.hkl_get()
+        pos = [None]* len(motors)
+        for i in range(0,len(_geom_.real_positioners._fields)):
+            pos[i]=0
+        old_h = 0
+        old_k = 0
+        old_l = 0
 
-        else:
-            old_delta = 60
-            old_th = 30
-            old_chi = 0
-            old_phi = 0
-            old_h = 0
-            old_k = 4
-            old_l = 0
-            if len(_geom_.calc.physical_axes) == 6:
-                old_gamma = 0
-                old_mu = 0
+    print("Enter primary-reflection angles:")
+    or1pos = [None] * len(_geom_.real_positioners._fields)
+    for i in range(0,len(_geom_.real_positioners._fields)):
+        temppos = input("{} = [{:6.2f}]: ".format(motors[i], pos[i])) or pos[i]
+        or1pos[i] = float(temppos)
+    h = input("H = [{}]: ".format(old_h)) or old_h
+    k = input("K = [{}]: ".format(old_k)) or old_k
+    l = input("L = [{}]: ".format(old_l)) or old_l
 
-        print("Enter secondary-reflection angles:")
-        delta = input("Delta = [{:6.2f}]: ".format(old_delta)) or old_delta
-        th = input("Theta = [{:6.2f}]: ".format(old_th)) or old_th
-        chi = input("Chi = [{:6.2f}]: ".format(old_chi)) or old_chi
-        phi = input("Phi = [{:6.2f}]: ".format(old_phi)) or old_phi
-        if len(_geom_.calc.physical_axes) == 6:
-            gamma = input("Nu = [{:6.2f}]: ".format(old_gamma)) or old_gamma
-            mu = input("Mu = [{:6.2f}]: ".format(old_mu)) or old_mu
-        h = input("H = [{}]: ".format(old_h)) or old_h
-        k = input("K = [{}]: ".format(old_k)) or old_k
-        l = input("L = [{}]: ".format(old_l)) or old_l
-
-    if len(_geom_.calc.physical_axes) == 6:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                delta=float(delta),
-                omega=float(th),
-                chi=float(chi),
-                phi=float(phi),
-                gamma=float(gamma),
-                mu=float(mu),
-            ),
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                tth=float(delta),
-                omega=float(th),
-                chi=float(chi),
-                phi=float(phi),
-            ),
-        )
+    sample.add_reflection(
+        float(h),
+        float(k),
+        float(l),
+        or1pos
+    )
     if len(orienting_refl) > 1:
         sample._orientation_reflections.pop(1)
     sample._orientation_reflections.insert(
@@ -694,151 +413,37 @@ def set_orienting():
     _geom_ = current_diffractometer()
     sample = _geom_.calc._sample
     orienting_refl = sample._orientation_reflections
-    if len(_geom_.calc.physical_axes) == 6:
-        print(
-            "\n{:>2}{:>4}{:>3}{:>3}{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}   {:<12}".format(
-                "#",
-                "H",
-                "K",
-                "L",
-                "Delta",
-                "Theta",
-                "Chi",
-                "Phi",
-                "Gamma",
-                "Mu",
-                "orienting",
-            )
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        print(
-            "\n{:>2}{:>4}{:>3}{:>3}{:>12}{:>9}{:>9}{:>9}   {:<12}".format(
-                "#",
-                "H",
-                "K",
-                "L",
-                "Two Theta",
-                "Theta",
-                "Chi",
-                "Phi",
-                "orienting",
-            )
-        )
-    else:
-        raise ValueError("Geometry {} not supported.".format(_geom_.name))
-
+    print(
+        f"\n #  {''.join(f'{m:>7}'for m in _geom_.pseudo_positioners._fields).upper()}"
+        f" {''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+        f"   orienting"
+    )
     for i, ref in enumerate(sample._sample.reflections_get()):
         if orienting_refl[0] == ref:
             or0_old = i
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "first",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "first",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                "   first"
+            )
         elif orienting_refl[1] == ref:
             or1_old = i
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "second",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "second",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                 "   second"
+            )
         else:
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}"
+            )
 
     or0 = input("\nFirst orienting ({})? ".format(or0_old)) or or0_old
     or1 = input("Second orienting ({})? ".format(or1_old)) or or1_old
@@ -867,151 +472,39 @@ def del_reflection():
     _geom_ = current_diffractometer()
     sample = _geom_.calc._sample
     orienting_refl = sample._orientation_reflections
-    if len(_geom_.calc.physical_axes) == 6:
-        print(
-            "\n{:>2}{:>4}{:>3}{:>3}{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}   {:<12}".format(
-                "#",
-                "H",
-                "K",
-                "L",
-                "Delta",
-                "Theta",
-                "Chi",
-                "Phi",
-                "Gamma",
-                "Mu",
-                "orienting",
-            )
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        print(
-            "\n{:>2}{:>4}{:>3}{:>3}{:>12}{:>9}{:>9}{:>9}   {:<12}".format(
-                "#",
-                "H",
-                "K",
-                "L",
-                "Two Theta",
-                "Theta",
-                "Chi",
-                "Phi",
-                "orienting",
-            )
-        )
-    else:
-        raise ValueError("Geometry {} not supported.".format(_geom_.name))
+    print(
+        f"\n #  {''.join(f'{m:>7}'for m in _geom_.pseudo_positioners._fields).upper()}"
+        f" {''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+        f"   orienting"
+    )
+
 
     for i, ref in enumerate(sample._sample.reflections_get()):
         if orienting_refl[0] == ref:
+            h, k, l = ref.hkl_get()
+            pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                 "   first"
+            )
             or0_old = i
-            h, k, l = ref.hkl_get()
-            pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "first",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "first",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
         elif orienting_refl[1] == ref:
-            or1_old = i
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "second",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "second",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                 "   second"
+            )
+            or1_old = i
         else:
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                f"{''.join(f'{k:>10.3f}' for k in pos)}"
+            )
 
     remove = input("\nRemove reflection # ")
     if not remove:
@@ -1048,122 +541,36 @@ def list_orienting(all_samples=False):
         samples = [_geom_.calc._sample]
     for sample in samples:
         orienting_refl = sample._orientation_reflections
-        if len(_geom_.calc.physical_axes) == 6:
-            print(
-                "\n{:>2}{:>4}{:>3}{:>3}{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}   {:<12}".format(
-                    "#",
-                    "H",
-                    "K",
-                    "L",
-                    "Delta",
-                    "Theta",
-                    "Chi",
-                    "Phi",
-                    "Gamma",
-                    "Mu",
-                    "orienting",
-                )
-            )
-        elif len(_geom_.calc.physical_axes) == 4:
-            print(
-                "\n{:>2}{:>4}{:>3}{:>3}{:>12}{:>9}{:>9}{:>9}   {:<12}".format(
-                    "#",
-                    "H",
-                    "K",
-                    "L",
-                    "Two Theta",
-                    "Theta",
-                    "Chi",
-                    "Phi",
-                    "orienting",
-                )
-            )
-        else:
-            raise ValueError("Geometry {} not supported.".format(_geom_.name))
+        print(
+            f"\n #  {''.join(f'{m:>7}'for m in _geom_.pseudo_positioners._fields).upper()}"
+            f" {''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+            f"   orienting"
+        )
+
 
     for i, ref in enumerate(sample._sample.reflections_get()):
         if orienting_refl[0] == ref:
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "first",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "first",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                 "   first"
+            )
+
         elif orienting_refl[1] == ref:
             h, k, l = ref.hkl_get()
             pos = ref.geometry_get().axis_values_get(_geom_.calc._units)
-            if len(_geom_.calc.physical_axes) == 6:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[4],
-                        pos[1],
-                        pos[2],
-                        pos[3],
-                        pos[5],
-                        pos[0],
-                        "second",
-                    )
-                )
-            elif len(_geom_.calc.physical_axes) == 4:
-                print(
-                    "{:>2}{:>4}{:>3}{:>3}{:>12.3f}{:>9.3f}{:>9.3f}{:>9.3f}   {:<12} ".format(
-                        i,
-                        int(h),
-                        int(k),
-                        int(l),
-                        pos[3],
-                        pos[0],
-                        pos[1],
-                        pos[2],
-                        "second",
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Geometry {} not supported.".format(_geom_.name)
-                )
+            print(
+                "{:>2}  {:>7.3f}{:>7.3f}{:>7.3f}".format(i,float(h),float(k),float(l)),
+                 f"{''.join(f'{k:>10.3f}' for k in pos)}",
+                 "   second"
+            )
 
 
 def or0(h=None, k=None, l=None):
     """
     Sets the primary orientation in hklpy using the current motor positions.
-
-    WARNING: This function will only work with six circles. This will be fixed
-    in future releases.
 
     Parameters
     ----------
@@ -1186,32 +593,12 @@ def or0(h=None, k=None, l=None):
         h = (input("H ({})? ".format(hr)) if not h else h) or hr
         k = (input("K ({})? ".format(kr)) if not k else k) or kr
         l = (input("L ({})? ".format(lr)) if not l else l) or lr
-    if len(_geom_.calc.physical_axes) == 6:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                delta=_geom_.delta.get().user_readback,
-                omega=_geom_.omega.get().user_readback,
-                chi=_geom_.chi.get().user_readback,
-                phi=_geom_.phi.get().user_readback,
-                gamma=_geom_.gamma.get().user_readback,
-                mu=_geom_.mu.get().user_readback,
-            ),
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                tth=_geom_.tth.get().user_readback,
-                omega=_geom_.omega.get().user_readback,
-                chi=_geom_.chi.get().user_readback,
-                phi=_geom_.phi.get().user_readback,
-            ),
-        )
+    sample.add_reflection(
+        float(h),
+        float(k),
+        float(l),
+        position=_geom_.real_position
+    )
 
     if len(orienting_refl) > 1:
         sample._orientation_reflections.pop(0)
@@ -1231,9 +618,6 @@ def or0(h=None, k=None, l=None):
 def or1(h=None, k=None, l=None):
     """
     Sets the secondary orientation in hklpy using the current motor positions.
-
-    WARNING: This function will only work with six circles. This will be fixed
-    in future releases.
 
     Parameters
     ----------
@@ -1256,32 +640,12 @@ def or1(h=None, k=None, l=None):
         h = (input("H ({})? ".format(hr)) if not h else h) or hr
         k = (input("K ({})? ".format(kr)) if not k else k) or kr
         l = (input("L ({})? ".format(lr)) if not l else l) or lr
-    if len(_geom_.calc.physical_axes) == 6:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                delta=_geom_.delta.get().user_readback,
-                omega=_geom_.omega.get().user_readback,
-                chi=_geom_.chi.get().user_readback,
-                phi=_geom_.phi.get().user_readback,
-                gamma=_geom_.gamma.get().user_readback,
-                mu=_geom_.mu.get().user_readback,
-            ),
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        sample.add_reflection(
-            float(h),
-            float(k),
-            float(l),
-            position=_geom_.calc.Position(
-                tth=_geom_.tth.get().user_readback,
-                omega=_geom_.omega.get().user_readback,
-                chi=_geom_.chi.get().user_readback,
-                phi=_geom_.phi.get().user_readback,
-            ),
-        )
+    sample.add_reflection(
+        float(h),
+        float(k),
+        float(l),
+        position=_geom_.real_position
+    )
 
     if len(orienting_refl) > 1:
         sample._orientation_reflections.pop(1)
@@ -1388,36 +752,13 @@ def ca(h, k, l):
         )
     )
     print(
-        "\n   Lambda (Energy) = {:6.4f} \u212B ({:6.4f} keV)".format(
-            _geom_.calc.wavelength, _geom_.calc.energy
-        )
+        f"\n   Lambda (Energy) = {_geom_.calc.wavelength:6.4f} \u212b"
+        f" ({_geom_.calc.energy:6.4f}) keV"
     )
-    if len(_geom_.calc.physical_axes) == 6:
-        print(
-            "\n{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}".format(
-                "Delta", "Eta", "Chi", "Phi", "Nu", "Mu"
-            )
-        )
-        print(
-            "{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}".format(
-                pos[5],
-                pos[1],
-                pos[2],
-                pos[3],
-                pos[4],
-                pos[0],
-            )
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        print("\n{:>9}{:>9}{:>9}{:>9}".format("Delta", "Theta", "Chi", "Phi"))
-        print(
-            "{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}".format(
-                pos[3],
-                pos[0],
-                pos[1],
-                pos[2],
-            )
-        )
+    print(
+        f"\n{''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+        f"\n{''.join(f'{v:>10.3f}' for v in pos)}"
+    )
 
 def _ensure_idle():
     if  RE.state != 'idle':
