@@ -1552,45 +1552,17 @@ def _wh():
     _geom_for_psi_.UB.put(_geom_.UB.get())
     _geom_for_q_ = engine_for_q()
     print(
-        "\n   H K L = {:5f}, {:5f}, {:5f}".format(
-            _geom_.h.get()[0],
-            _geom_.k.get()[0],
-            _geom_.l.get()[0],
-        )
+        f"\n   {' '.join(_geom_.pseudo_positioners._fields).upper()}"
+        f" = {', '.join([f'{v.position:5f}' for v in _geom_.pseudo_positioners])}"
     )
     print(
-        "\n   Lambda (Energy) = {:6.4f} \u212B ({:6.4f} keV)".format(
-            _geom_.calc.wavelength, _geom_.calc.energy
-        )
+        f"\n   Lambda (Energy) = {_geom_.calc.wavelength:6.4f} \u212b"
+        f" ({_geom_.calc.energy:6.4f}) keV"
     )
-    if len(_geom_.calc.physical_axes) == 6:
-        print(
-            "\n{:>9}{:>9}{:>9}{:>9}{:>9}{:>9}".format(
-                "Delta", "Eta", "Chi", "Phi", "Nu", "Mu"
-            )
-        )
-        print(
-            "{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}{:>9.3f}".format(
-                _geom_.delta.get()[0],
-                _geom_.omega.get()[0],
-                _geom_.chi.get()[0],
-                _geom_.phi.get()[0],
-                _geom_.gamma.get()[0],
-                _geom_.mu.get()[0],
-            )
-        )
-    elif len(_geom_.calc.physical_axes) == 4:
-        print(
-            "\n{:>11}{:>9}{:>9}{:>9}".format("Two Theta", "Theta", "Chi", "Phi")
-        )
-        print(
-            "{:>11.3f}{:>9.3f}{:>9.3f}{:>9.3f}".format(
-                _geom_.tth.get()[0],
-                _geom_.omega.get()[0],
-                _geom_.chi.get()[0],
-                _geom_.phi.get()[0],
-            )
-        )
+    print(
+        f"\n{''.join(f'{k:>10}' for k in _geom_.real_positioners._fields)}"
+        f"\n{''.join(f'{v.position:>10.3f}' for v in _geom_.real_positioners)}"
+    )
     print(
         "\n   PSI = {:5.4f} ".format(
             _geom_for_psi_.inverse(0).psi,
