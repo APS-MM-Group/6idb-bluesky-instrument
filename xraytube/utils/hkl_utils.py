@@ -1548,7 +1548,8 @@ def _wh():
     """
     _geom_ = current_diffractometer()
     _geom_for_psi_ = engine_for_psi()
-    _geom_for_psi_.calc.sample.UB=_geom_.calc._sample.UB
+    #_geom_for_psi_.calc.sample.UB=_geom_.calc._sample.UB
+    _geom_for_psi_.UB.put(_geom_.UB.get())
     _geom_for_q_ = engine_for_q()
     print(
         "\n   H K L = {:5f}, {:5f}, {:5f}".format(
