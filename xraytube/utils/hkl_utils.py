@@ -184,13 +184,41 @@ def sampleChange(sample_key=None):
     except KeyError:
         print("Not a valid sample key")
 
+def sampleRemove(sample_key=None):
+    """
+    Remove selected sample in hklpy.
+
+    Parameters
+    ----------
+    sample_key : string, optional
+        Name of the sample as set in hklpy. If None it will ask for which
+        sample.
+    """
+    _geom_ = current_diffractometer()
+    if sample_key is None:
+        d = _geom_.calc._samples.keys()
+        print("Sample keys:", list(d))
+        sample_key = (
+            input("\nEnter sample key to remove [{}]: ".format(_geom_.calc.sample.name))
+        )
+        if sample_key == _geom_.calc.sample.name:
+            print("The current sample cannot be removed.")
+            sample_key = " "
+    try:
+        _geom_.calc._samples.pop(sample_key)  # remove the sample
+        print("\n[{}] sample is removed.".format(sample_key))
+
+    except KeyError:
+        print("Not a valid sample key")
+
+
 
 def _sampleList():
     """List all samples currently defined in hklpy; specify  current one."""
     _geom_ = current_diffractometer()
     samples = _geom_.calc._samples
     print("")
-    for x in list(samples.keys())[1:]:
+    for x in list(samples.keys())[0:]:
         orienting_refl = samples[x]._orientation_reflections
         print("Sample = {}".format(x))
         print("Lattice:", end=" ")
